@@ -24,9 +24,6 @@ func main() {
 		MaxAge: 12 * time.Hour,
 	}))
 
-	r.GET("/", func(c *gin.Context) {
-		c.String(200, "Hello, World!")
-	})
 	handler.RegisterRoutes(r)
 	r.Run(":8080")
 }
