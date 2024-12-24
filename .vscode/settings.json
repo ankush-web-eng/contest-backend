@@ -1,0 +1,18 @@
+{
+    "go.testFlags": ["-v"],
+    "go.testTimeout": "30s",
+    "go.formatTool": "gofmt",
+    "go.lintTool": "golangci-lint",
+    "go.useLanguageServer": true,
+    "[go]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+        }
+    },
+    "go.coverageDecorator": {
+        "type": "highlight",
+        "coveredHighlightColor": "rgba(64,128,128,0.5)",
+        "uncoveredHighlightColor": "rgba(128,64,64,0.25)"
+    }
+}

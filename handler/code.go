@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.Engine) {
+func RegisterCodeRoutes(r *gin.Engine) {
 	codeRouter := r.Group("/code")
 	{
 		codeRouter.POST("/submit", submitCode)

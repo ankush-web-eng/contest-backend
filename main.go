@@ -3,13 +3,18 @@ package main
 import (
 	"time"
 
+	"github.com/ankush-web-eng/contest-backend/config"
 	"github.com/ankush-web-eng/contest-backend/handler"
+	"github.com/ankush-web-eng/contest-backend/models"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	r := gin.Default()
+
+	config.InitDB()
+	config.DB.AutoMigrate(&models.User{}, &models.Contest{}, &models.Problem{})
 	// gin.SetMode(gin.ReleaseMode)
 
 	r.Use(cors.New(cors.Config{
@@ -24,6 +29,7 @@ func main() {
 		MaxAge: 12 * time.Hour,
 	}))
 
-	handler.RegisterRoutes(r)
+	handler.RegisterAuthRoutes(r)
+	handler.RegisterAuthRoutes(r)
 	r.Run(":8080")
 }
