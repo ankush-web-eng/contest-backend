@@ -14,7 +14,9 @@ func main() {
 	r := gin.Default()
 
 	config.InitDB()
-	config.DB.AutoMigrate(&models.User{}, &models.Contest{}, &models.Problem{})
+	if err := config.DB.AutoMigrate(&models.User{}, &models.Contest{}, &models.Problem{}); err != nil {
+		panic("Failed to migrate database: " + err.Error())
+	}
 	// gin.SetMode(gin.ReleaseMode)
 
 	r.Use(cors.New(cors.Config{
@@ -29,7 +31,9 @@ func main() {
 		MaxAge: 12 * time.Hour,
 	}))
 
+	handler.RegisterCodeRoutes(r)
 	handler.RegisterAuthRoutes(r)
-	handler.RegisterAuthRoutes(r)
-	r.Run(":8080")
+	if err := r.Run(":8080"); err != nil {
+		panic("Failed to start server: " + err.Error())
+	}
 }
