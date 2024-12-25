@@ -13,6 +13,7 @@ func RegisterAuthRoutes(r *gin.Engine) {
 		authRouter.POST("/signin", signin)
 		authRouter.POST("/signup", signup)
 		authRouter.GET("/verify", verify)
+		authRouter.POST("/signout", signout)
 	}
 }
 
@@ -26,37 +27,6 @@ type SignUpRequest struct {
 	LastName  string `json:"last_name" binding:"required"`
 	Email     string `json:"email" binding:"required"`
 	Password  string `json:"password" binding:"required"`
-}
-
-func signin(c *gin.Context) {
-	var reqBody SignInRequest
-
-	if err := c.ShouldBindJSON(&reqBody); err != nil {
-		c.JSON(500, gin.H{"error": "Request Body is invalid!!"})
-		return
-	}
-
-	var db = config.GetDB()
-
-	var user models.User
-
-	if err := db.Where("email = ?", &reqBody.Email).First(&user).Error; err != nil {
-		c.JSON(404, gin.H{"message": "User does not exist, please login!!"})
-		return
-	}
-
-	if !helpers.CheckPasswordHash(reqBody.Password, user.Password) {
-		c.JSON(401, gin.H{"message": "Password is incorrect!!"})
-		return
-	}
-
-	sessionToken, _ := helpers.GenerateSessionToken()
-	user.SessionToken = sessionToken
-	db.Save(&user)
-
-	c.SetCookie("session_token", sessionToken, 3600000, "/", "localhost", true, true)
-
-	c.JSON(200, gin.H{"message": "Signin successful"})
 }
 
 func signup(c *gin.Context) {
@@ -97,6 +67,40 @@ func signup(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Signup successful"})
 }
 
+func signin(c *gin.Context) {
+	var reqBody SignInRequest
+
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(500, gin.H{"error": "Request Body is invalid!!"})
+		return
+	}
+
+	var db = config.GetDB()
+
+	var user models.User
+
+	if err := db.Where("email = ?", &reqBody.Email).First(&user).Error; err != nil {
+		c.JSON(404, gin.H{"message": "User does not exist, please login!!"})
+		return
+	}
+
+	if !helpers.CheckPasswordHash(reqBody.Password, user.Password) {
+		c.JSON(401, gin.H{"message": "Password is incorrect!!"})
+		return
+	}
+
+	sessionToken, _ := helpers.GenerateSessionToken()
+	user.SessionToken = sessionToken
+	db.Save(&user)
+
+	c.SetCookie("session_token", sessionToken, 3600000, "/", "localhost", false, true)
+
+	c.JSON(200, gin.H{
+		"message": "Signin successful",
+		"user":    user,
+	})
+}
+
 func verify(c *gin.Context) {
 	sessionToken, err := c.Cookie("session_token")
 	if err != nil {
@@ -115,5 +119,28 @@ func verify(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Verification successful",
 		"user":    user,
+	})
+}
+
+func signout(c *gin.Context) {
+	sessionToken, err := c.Cookie("session_token")
+	if err != nil {
+		c.JSON(401, gin.H{"message": "Unauthorized"})
+		return
+	}
+
+	var db = config.GetDB()
+	var user models.User
+
+	if err := db.Where("session_token = ?", sessionToken).First(&user).Error; err != nil {
+		c.JSON(401, gin.H{"message": "Unauthorized"})
+		return
+	}
+
+	user.SessionToken = ""
+	db.Save(&user)
+
+	c.JSON(200, gin.H{
+		"message": "Signout successful",
 	})
 }

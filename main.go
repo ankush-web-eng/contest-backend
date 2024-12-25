@@ -5,7 +5,6 @@ import (
 
 	"github.com/ankush-web-eng/contest-backend/config"
 	"github.com/ankush-web-eng/contest-backend/handler"
-	"github.com/ankush-web-eng/contest-backend/models"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -14,9 +13,9 @@ func main() {
 	r := gin.Default()
 
 	config.InitDB()
-	if err := config.DB.AutoMigrate(&models.User{}, &models.Contest{}, &models.Problem{}); err != nil {
-		panic("Failed to migrate database: " + err.Error())
-	}
+	// if err := config.DB.AutoMigrate(&models.User{}, &models.Contest{}, &models.Problem{}); err != nil {
+	// 	panic("Failed to migrate database: " + err.Error())
+	// }
 	// gin.SetMode(gin.ReleaseMode)
 
 	r.Use(cors.New(cors.Config{
@@ -25,10 +24,7 @@ func main() {
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
 		AllowCredentials: true,
-		AllowOriginFunc: func(origin string) bool {
-			return origin == "http://localhost:3000"
-		},
-		MaxAge: 12 * time.Hour,
+		MaxAge:           12 * time.Hour,
 	}))
 
 	handler.RegisterCodeRoutes(r)
