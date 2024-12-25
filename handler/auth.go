@@ -75,11 +75,18 @@ func signup(c *gin.Context) {
 		return
 	}
 
+	sessionToken, err := helpers.GenerateSessionToken()
+	if err != nil {
+		c.JSON(500, gin.H{"message": "Failed to generate session token"})
+		return
+	}
+
 	user := models.User{
-		FirstName: reqBody.FirstName,
-		LastName:  reqBody.LastName,
-		Email:     reqBody.Email,
-		Password:  hashedPassword,
+		FirstName:    reqBody.FirstName,
+		LastName:     reqBody.LastName,
+		Email:        reqBody.Email,
+		Password:     hashedPassword,
+		SessionToken: sessionToken,
 	}
 
 	if err := db.Create(&user).Error; err != nil {
