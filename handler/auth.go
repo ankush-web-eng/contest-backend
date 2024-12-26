@@ -10,8 +10,9 @@ import (
 func RegisterAuthRoutes(r *gin.Engine) {
 	authRouter := r.Group("/auth")
 	{
-		authRouter.POST("/signin", signin)
 		authRouter.POST("/signup", signup)
+		authRouter.POST("/verify-email", verifyEmail)
+		authRouter.POST("/signin", signin)
 		authRouter.GET("/verify", verify)
 		authRouter.POST("/signout", signout)
 	}
@@ -39,9 +40,23 @@ func signup(c *gin.Context) {
 
 	var db = config.GetDB()
 
+	var user models.User
+	if err := db.Where("email = ?", reqBody.Email).First(&user).Error; err == nil {
+		if user.IsVerified {
+			c.JSON(400, gin.H{"message": "User already exists!!"})
+			return
+		}
+	}
+
 	hashedPassword, err := helpers.HashPassword(reqBody.Password)
 	if err != nil {
 		c.JSON(500, gin.H{"message": "Failed to hash password"})
+		return
+	}
+
+	verifyToken, err := helpers.GenerateVerifyToken()
+	if err != nil {
+		c.JSON(500, gin.H{"message": "Failed to generate verify token"})
 		return
 	}
 
@@ -51,20 +66,63 @@ func signup(c *gin.Context) {
 		return
 	}
 
-	user := models.User{
+	if err := helpers.SendEmail(helpers.EmailDetails{
+		From:    "ankushsingh.dev@gmail.com",
+		To:      reqBody.Email,
+		Subject: "Verify your email",
+		Body:    "Your verification token is " + verifyToken,
+	}); err != nil {
+		c.JSON(500, gin.H{"message": "Failed to send email"})
+		return
+	}
+
+	newUser := models.User{
 		FirstName:    reqBody.FirstName,
 		LastName:     reqBody.LastName,
 		Email:        reqBody.Email,
 		Password:     hashedPassword,
 		SessionToken: sessionToken,
+		IsVerified:   false,
+		VerifyToken:  verifyToken,
 	}
 
-	if err := db.Create(&user).Error; err != nil {
+	if err := db.Create(&newUser).Error; err != nil {
 		c.JSON(500, gin.H{"message": "Failed to create user"})
 		return
 	}
 
 	c.JSON(200, gin.H{"message": "Signup successful"})
+}
+
+func verifyEmail(c *gin.Context) {
+	var reqBody struct {
+		Email       string `json:"email" binding:"required"`
+		VerifyToken string `json:"verify_token" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(500, gin.H{"message": "Request Body is invalid!!"})
+		return
+	}
+
+	var db = config.GetDB()
+	var user models.User
+
+	if err := db.Where("email = ?", reqBody.Email).First(&user).Error; err != nil {
+		c.JSON(404, gin.H{"message": "User does not exist!!"})
+		return
+	}
+
+	if user.VerifyToken != reqBody.VerifyToken {
+		c.JSON(401, gin.H{"message": "Invalid verification token!!"})
+		return
+	}
+
+	user.IsVerified = true
+
+	db.Save(&user)
+
+	c.JSON(200, gin.H{"message": "Email verified successfully"})
 }
 
 func signin(c *gin.Context) {
@@ -86,6 +144,11 @@ func signin(c *gin.Context) {
 
 	if !helpers.CheckPasswordHash(reqBody.Password, user.Password) {
 		c.JSON(401, gin.H{"message": "Password is incorrect!!"})
+		return
+	}
+
+	if !user.IsVerified {
+		c.JSON(401, gin.H{"message": "User is not verified!! please verify your email"})
 		return
 	}
 
@@ -140,6 +203,7 @@ func signout(c *gin.Context) {
 	user.SessionToken = ""
 	db.Save(&user)
 
+	c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
 	c.JSON(200, gin.H{
 		"message": "Signout successful",
 	})

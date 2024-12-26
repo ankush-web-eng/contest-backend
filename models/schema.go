@@ -17,6 +17,8 @@ type User struct {
 	Gender    string
 
 	SessionToken string `gorm:"unique"`
+	VerifyToken  string
+	IsVerified   bool
 	LastLogin    time.Time
 	CreatedAt    time.Time
 	UpdatedAt    time.Time

@@ -27,6 +27,14 @@ func GenerateSessionToken() (string, error) {
 	return base64.URLEncoding.EncodeToString(bytes), nil
 }
 
+func GenerateVerifyToken() (string, error) {
+	bytes := make([]byte, 2)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
 func InvalidatePreviousSessions(db *gorm.DB, userID uint) error {
 	return db.Model(&models.User{}).Where("id = ?", userID).Update("session_token", nil).Error
 }
