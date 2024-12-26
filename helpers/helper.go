@@ -3,6 +3,7 @@ package helpers
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/ankush-web-eng/contest-backend/models"
 	"golang.org/x/crypto/bcrypt"
@@ -32,7 +33,8 @@ func GenerateVerifyToken() (string, error) {
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err
 	}
-	return base64.URLEncoding.EncodeToString(bytes), nil
+	code := int(bytes[0])<<8 + int(bytes[1])
+	return fmt.Sprintf("%04d", code%10000), nil
 }
 
 func InvalidatePreviousSessions(db *gorm.DB, userID uint) error {

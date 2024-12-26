@@ -46,48 +46,53 @@ func signup(c *gin.Context) {
 			c.JSON(400, gin.H{"message": "User already exists!!"})
 			return
 		}
-	}
+		user.FirstName = reqBody.FirstName
+		user.LastName = reqBody.LastName
+		user.Password, _ = helpers.HashPassword(reqBody.Password)
+		user.VerifyToken, _ = helpers.GenerateVerifyToken()
+		user.SessionToken, _ = helpers.GenerateSessionToken()
+	} else {
+		hashedPassword, err := helpers.HashPassword(reqBody.Password)
+		if err != nil {
+			c.JSON(500, gin.H{"message": "Failed to hash password"})
+			return
+		}
 
-	hashedPassword, err := helpers.HashPassword(reqBody.Password)
-	if err != nil {
-		c.JSON(500, gin.H{"message": "Failed to hash password"})
-		return
-	}
+		verifyToken, err := helpers.GenerateVerifyToken()
+		if err != nil {
+			c.JSON(500, gin.H{"message": "Failed to generate verify token"})
+			return
+		}
 
-	verifyToken, err := helpers.GenerateVerifyToken()
-	if err != nil {
-		c.JSON(500, gin.H{"message": "Failed to generate verify token"})
-		return
-	}
+		sessionToken, err := helpers.GenerateSessionToken()
+		if err != nil {
+			c.JSON(500, gin.H{"message": "Failed to generate session token"})
+			return
+		}
 
-	sessionToken, err := helpers.GenerateSessionToken()
-	if err != nil {
-		c.JSON(500, gin.H{"message": "Failed to generate session token"})
-		return
+		user = models.User{
+			FirstName:    reqBody.FirstName,
+			LastName:     reqBody.LastName,
+			Email:        reqBody.Email,
+			Password:     hashedPassword,
+			SessionToken: sessionToken,
+			IsVerified:   false,
+			VerifyToken:  verifyToken,
+		}
 	}
 
 	if err := helpers.SendEmail(helpers.EmailDetails{
 		From:    "ankushsingh.dev@gmail.com",
 		To:      reqBody.Email,
 		Subject: "Verify your email",
-		Body:    "Your verification token is " + verifyToken,
+		Body:    "Your verification token is " + user.VerifyToken,
 	}); err != nil {
 		c.JSON(500, gin.H{"message": "Failed to send email"})
 		return
 	}
 
-	newUser := models.User{
-		FirstName:    reqBody.FirstName,
-		LastName:     reqBody.LastName,
-		Email:        reqBody.Email,
-		Password:     hashedPassword,
-		SessionToken: sessionToken,
-		IsVerified:   false,
-		VerifyToken:  verifyToken,
-	}
-
-	if err := db.Create(&newUser).Error; err != nil {
-		c.JSON(500, gin.H{"message": "Failed to create user"})
+	if err := db.Save(&user).Error; err != nil {
+		c.JSON(500, gin.H{"message": "Failed to save user"})
 		return
 	}
 
