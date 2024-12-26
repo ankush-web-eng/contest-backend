@@ -1,8 +1,11 @@
 package config
 
 import (
+	"log"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 type SMTPConfig struct {
@@ -22,6 +25,11 @@ func LoadSMTPConfig() SMTPConfig {
 }
 
 func getEnvAsInt(name string, defaultVal int) int {
+	errs := godotenv.Load()
+	if errs != nil {
+		log.Println("Error loading .env file. Falling back to system environment variables.")
+		panic(errs)
+	}
 	valueStr := os.Getenv(name)
 	if valueStr == "" {
 		return defaultVal

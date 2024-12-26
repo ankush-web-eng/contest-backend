@@ -14,7 +14,7 @@ func RegisterAuthRoutes(r *gin.Engine) {
 		authRouter.POST("/verify-email", verifyEmail)
 		authRouter.POST("/signin", signin)
 		authRouter.GET("/verify", verify)
-		authRouter.POST("/signout", signout)
+		authRouter.GET("/signout", signout)
 	}
 }
 
@@ -188,7 +188,7 @@ func verify(c *gin.Context) {
 func signout(c *gin.Context) {
 	sessionToken, err := c.Cookie("session_token")
 	if err != nil {
-		c.JSON(401, gin.H{"message": "Unauthorized"})
+		c.JSON(401, gin.H{"message": "Unauthorized & No previous session exists!!"})
 		return
 	}
 

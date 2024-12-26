@@ -13,6 +13,7 @@ func main() {
 	r := gin.Default()
 
 	config.InitDB()
+	// db := config.GetDB()
 	// if err := config.DB.AutoMigrate(&models.User{}, &models.Contest{}, &models.Problem{}); err != nil {
 	// 	panic("Failed to migrate database: " + err.Error())
 	// }
@@ -28,6 +29,7 @@ func main() {
 	}))
 
 	handler.RegisterCodeRoutes(r)
+	// workerPool := handler.NewWorkerPool(db)
 	handler.RegisterAuthRoutes(r)
 	if err := r.Run(":8080"); err != nil {
 		panic("Failed to start server: " + err.Error())
