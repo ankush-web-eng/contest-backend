@@ -28,9 +28,10 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	handler.RegisterCodeRoutes(r)
 	// workerPool := handler.NewWorkerPool(db)
 	handler.RegisterAuthRoutes(r)
+	handler.RegisterUserRoutes(r)
+	handler.RegisterCodeRoutes(r)
 	if err := r.Run(":8080"); err != nil {
 		panic("Failed to start server: " + err.Error())
 	}
