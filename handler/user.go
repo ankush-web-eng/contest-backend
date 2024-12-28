@@ -119,7 +119,9 @@ func UpdateUserDetails(c *gin.Context) {
 	user.LastName = reqBody.LastName
 	user.Phone = reqBody.Phone
 	user.Gender = reqBody.Gender
-	user.Password, _ = helpers.HashPassword(reqBody.Password)
+	if reqBody.Password != "" {
+		user.Password, _ = helpers.HashPassword(reqBody.Password)
+	}
 
 	db.Save(&user)
 
