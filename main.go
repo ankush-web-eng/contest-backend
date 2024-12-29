@@ -14,7 +14,14 @@ func main() {
 
 	config.InitDB()
 	// db := config.GetDB()
-	// if err := config.DB.AutoMigrate(&models.User{}, &models.Contest{}, &models.Problem{}); err != nil {
+	// if err := config.DB.AutoMigrate(
+	// 	&models.User{},
+	// 	&models.Contest{},
+	// 	&models.Problem{},
+	// 	&models.TestCase{},
+	// 	&models.Submission{},
+	// 	&models.UserContest{},
+	// 	&models.RatingChange{}); err != nil {
 	// 	panic("Failed to migrate database: " + err.Error())
 	// }
 	// gin.SetMode(gin.ReleaseMode)
