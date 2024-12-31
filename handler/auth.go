@@ -143,7 +143,7 @@ func signin(c *gin.Context) {
 	var user models.User
 
 	if err := db.Where("email = ?", &reqBody.Email).First(&user).Error; err != nil {
-		c.JSON(404, gin.H{"message": "User does not exist, please login!!"})
+		c.JSON(404, gin.H{"message": "User does not exist, please signup!!"})
 		return
 	}
 

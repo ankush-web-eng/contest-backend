@@ -19,6 +19,7 @@ type User struct {
 	SessionToken string `gorm:"unique"`
 	VerifyToken  string
 	IsVerified   bool
+	IsAdmin      bool `gorm:"default:false"`
 	LastLogin    time.Time
 
 	CurrentRating     int `gorm:"default:1000;index"`

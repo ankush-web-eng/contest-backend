@@ -13,7 +13,6 @@ func main() {
 	r := gin.Default()
 
 	config.InitDB()
-	// db := config.GetDB()
 	// if err := config.DB.AutoMigrate(
 	// 	&models.User{},
 	// 	&models.Contest{},
@@ -35,9 +34,9 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// workerPool := handler.NewWorkerPool(db)
 	handler.RegisterAuthRoutes(r)
 	handler.RegisterUserRoutes(r)
+	handler.RegisterContestRoutes(r)
 	handler.RegisterCodeRoutes(r)
 	if err := r.Run(":8080"); err != nil {
 		panic("Failed to start server: " + err.Error())
