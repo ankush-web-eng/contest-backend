@@ -12,9 +12,46 @@ import (
 func RegisterContestRoutes(r *gin.Engine) {
 	contestRoutes := r.Group("/contest")
 	{
+		contestRoutes.GET("/get", getContest)
 		contestRoutes.POST("/create", createContest)
 		contestRoutes.POST("/update/problems", updateContestProblems)
 	}
+}
+
+func getContest(c *gin.Context) {
+	sessionToken, err := c.Cookie("session_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Session Token is invalid, login and try again!!"})
+		return
+	}
+
+	var db = config.GetDB()
+	var user models.User
+
+	if err := db.Where("session_token = ?", sessionToken).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized access!!"})
+		return
+	}
+
+	var contests []models.Contest
+	if err := db.Find(&contests).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch contests, please try again later!!"})
+		return
+	}
+
+	var userContests []models.Contest
+	var otherContests []models.Contest
+
+	for _, contest := range contests {
+		var userContest models.UserContest
+		if err := db.Where("user_id = ? AND contest_id = ?", user.ID, contest.ID).First(&userContest).Error; err != nil {
+			otherContests = append(otherContests, contest)
+		} else {
+			userContests = append(userContests, contest)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user_contests": userContests, "other_contests": otherContests})
 }
 
 type createContestRequest struct {
