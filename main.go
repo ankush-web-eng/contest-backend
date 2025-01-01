@@ -38,6 +38,7 @@ func main() {
 	handler.RegisterUserRoutes(r)
 	handler.RegisterContestRoutes(r)
 	handler.RegisterCodeRoutes(r)
+
 	if err := r.Run(":8080"); err != nil {
 		panic("Failed to start server: " + err.Error())
 	}

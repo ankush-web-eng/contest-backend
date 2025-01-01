@@ -101,8 +101,96 @@ func createContest(c *gin.Context) {
 }
 
 type updateContestRequest struct {
+	Problems []struct {
+		ContestID   uint   `json:"contest_id"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+
+		TimeLimit   int    `json:"time_limit"`
+		MemoryLimit int    `json:"memory_limit"`
+		Difficulty  string `json:"difficulty"`
+		Score       int    `json:"score"`
+		Rating      int    `json:"rating"`
+
+		SampleInput    string `json:"sample_input"`
+		SampleOutput   string `json:"sample_output"`
+		TestCasesCount int    `json:"test_cases_count"`
+
+		TestCases []struct {
+			ProblemID uint   `json:"problem_id"`
+			Input     string `json:"input"`
+			Output    string `json:"output"`
+			IsHidden  bool   `json:"is_hidden"`
+		} `json:"test_cases"`
+	} `json:"problems"`
+	ContestId uint `json:"contest_id"`
 }
 
 func updateContestProblems(c *gin.Context) {
+	var reqBody updateContestRequest
 
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Request type is invalid, please fix the sent data and its types!!"})
+		return
+	}
+
+	sessionToken, err := c.Cookie("session_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Session Token is invalid, login and try again!!"})
+		return
+	}
+
+	var db = config.GetDB()
+	var user models.User
+
+	if err := db.Where("session_token = ?", sessionToken).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized!!"})
+		return
+	}
+
+	if !user.IsAdmin {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Only admins can edit contests!!"})
+		return
+	}
+
+	var contest models.Contest
+	if err := db.Where("id = ?", reqBody.ContestId).First(&contest).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Contest not found!!"})
+		return
+	}
+
+	for _, problem := range reqBody.Problems {
+		var contestProblem models.Problem
+		contestProblem.ContestID = problem.ContestID
+		contestProblem.Title = problem.Title
+		contestProblem.Description = problem.Description
+		contestProblem.TimeLimit = problem.TimeLimit
+		contestProblem.MemoryLimit = problem.MemoryLimit
+		contestProblem.Difficulty = problem.Difficulty
+		contestProblem.Score = problem.Score
+		contestProblem.Rating = problem.Rating
+		contestProblem.SampleInput = problem.SampleInput
+		contestProblem.SampleOutput = problem.SampleOutput
+		contestProblem.TestCasesCount = problem.TestCasesCount
+
+		if err := db.Create(&contestProblem).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not create contest problem, please try again later!!"})
+			return
+		}
+
+		for _, testCase := range problem.TestCases {
+			var problemTestCase models.TestCase
+			problemTestCase.ProblemID = contestProblem.ID
+			problemTestCase.Input = testCase.Input
+			problemTestCase.Output = testCase.Output
+			problemTestCase.IsHidden = testCase.IsHidden
+
+			if err := db.Create(&problemTestCase).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not create test case, please try again later!!"})
+				return
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Contest problems updated successfully!!"})
 }
