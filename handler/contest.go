@@ -18,10 +18,10 @@ func RegisterContestRoutes(r *gin.Engine) {
 }
 
 type createContestRequest struct {
-	Name        string    `json:"name" binding:"required"`
-	Description string    `json:"description"`
-	StartTime   time.Time `json:"start_time" binding:"required"`
-	EndTime     time.Time `json:"end_time" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+	StartTime   string `json:"start_time" binding:"required"`
+	EndTime     string `json:"end_time" binding:"required"`
 
 	IsPublic    bool `json:"is_public" binding:"required"`
 	MaxDuration int  `json:"max_duration"`
@@ -64,11 +64,23 @@ func createContest(c *gin.Context) {
 		return
 	}
 
+	startTime, err := time.Parse(time.RFC3339, reqBody.StartTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid start time format"})
+		return
+	}
+
+	endTime, err := time.Parse(time.RFC3339, reqBody.EndTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid end time format"})
+		return
+	}
+
 	contest := models.Contest{
 		Name:          reqBody.Name,
 		Description:   reqBody.Description,
-		StartTime:     reqBody.StartTime.UTC(),
-		EndTime:       reqBody.EndTime.UTC(),
+		StartTime:     startTime.UTC(),
+		EndTime:       endTime.UTC(),
 		IsPublic:      reqBody.IsPublic,
 		MaxDuration:   reqBody.MaxDuration,
 		CreatorID:     user.ID,
