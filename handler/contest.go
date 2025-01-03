@@ -13,9 +13,25 @@ func RegisterContestRoutes(r *gin.Engine) {
 	contestRoutes := r.Group("/contest")
 	{
 		contestRoutes.GET("/get", getContest)
+		contestRoutes.GET("/get-all", getContests)
 		contestRoutes.POST("/create", createContest)
 		contestRoutes.POST("/update/problems", updateContestProblems)
+		contestRoutes.GET("/get-one/:id", getSingleContest)
 	}
+}
+
+func getSingleContest(c *gin.Context) {
+	contestID := c.Param("id")
+
+	var db = config.GetDB()
+	var contest models.Contest
+
+	if err := db.Preload("Problems.TestCases").First(&contest, contestID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Contest not found!!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"contest": contest})
 }
 
 func getContest(c *gin.Context) {
@@ -52,6 +68,18 @@ func getContest(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"user_contests": userContests, "other_contests": otherContests})
+}
+
+func getContests(c *gin.Context) {
+	var db = config.GetDB()
+
+	var contests []models.Contest
+	if err := db.Find(&contests).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch contests, please try again later!!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user_contests": contests})
 }
 
 type createContestRequest struct {
