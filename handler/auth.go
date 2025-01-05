@@ -15,6 +15,9 @@ func RegisterAuthRoutes(r *gin.Engine) {
 		authRouter.POST("/signin", signin)
 		authRouter.GET("/verify", verify)
 		authRouter.GET("/signout", signout)
+		authRouter.POST("/reset/send-email", sendResetMail)
+		authRouter.POST("/reset/verify-otp", verifyOTP)
+		authRouter.POST("/reset/change-password", changePassword)
 	}
 }
 
@@ -212,4 +215,103 @@ func signout(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Signout successful",
 	})
+}
+
+func sendResetMail(c *gin.Context) {
+	var reqBody struct {
+		Email string `json:"email" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(500, gin.H{"message": "Request Body is invalid!!"})
+		return
+	}
+
+	var db = config.GetDB()
+	var user models.User
+
+	if err := db.Where("email = ?", reqBody.Email).First(&user).Error; err != nil {
+		c.JSON(404, gin.H{"message": "User does not exist!!"})
+		return
+	}
+
+	otp, err := helpers.GenerateVerifyToken()
+	if err != nil {
+		c.JSON(500, gin.H{"message": "Failed to generate OTP"})
+		return
+	}
+
+	if err := helpers.SendEmail(helpers.EmailDetails{
+		From:    "ankushsingh.dev@gmail.com",
+		To:      reqBody.Email,
+		Subject: "Reset your password",
+		Body:    "Your OTP is " + otp,
+	}); err != nil {
+
+		c.JSON(500, gin.H{"message": "Failed to send email"})
+		return
+	}
+
+	user.VerifyToken = otp
+	db.Save(&user)
+
+	c.JSON(200, gin.H{"message": "OTP sent successfully"})
+}
+
+func verifyOTP(c *gin.Context) {
+	var reqBody struct {
+		Email       string `json:"email" binding:"required"`
+		VerifyToken string `json:"verify_token" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(500, gin.H{"message": "Request Body is invalid!!"})
+		return
+	}
+
+	var db = config.GetDB()
+	var user models.User
+
+	if err := db.Where("email = ?", reqBody.Email).First(&user).Error; err != nil {
+		c.JSON(404, gin.H{"message": "User does not exist!!"})
+		return
+	}
+
+	if user.VerifyToken != reqBody.VerifyToken {
+		c.JSON(401, gin.H{"message": "Invalid OTP!!"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "OTP verified successfully"})
+}
+
+func changePassword(c *gin.Context) {
+	var reqBody struct {
+		Email    string `json:"email" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(500, gin.H{"message": "Request Body is invalid!!"})
+		return
+	}
+
+	var db = config.GetDB()
+	var user models.User
+
+	if err := db.Where("email = ?", reqBody.Email).First(&user).Error; err != nil {
+		c.JSON(404, gin.H{"message": "User does not exist!!"})
+		return
+	}
+
+	hashedPassword, err := helpers.HashPassword(reqBody.Password)
+	if err != nil {
+		c.JSON(500, gin.H{"message": "Failed to hash password"})
+		return
+	}
+
+	user.Password = hashedPassword
+	db.Save(&user)
+
+	c.JSON(200, gin.H{"message": "Password changed successfully"})
 }
