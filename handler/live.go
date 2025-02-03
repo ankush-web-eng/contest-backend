@@ -10,6 +10,7 @@ func RegisterLiveRoutes(r *gin.Engine) {
 	liveRouter := r.Group("/live")
 	{
 		liveRouter.GET("/get/:contestId/:problemId", getAllProblems)
+		liveRouter.GET("/get/submissions/:problemId", getAllSubmissions)
 	}
 }
 
@@ -39,4 +40,31 @@ func getAllProblems(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"problem": problem})
+}
+
+func getAllSubmissions(c *gin.Context) {
+	problemId := c.Param("problemId")
+
+	sessionToken, err := c.Cookie("session_token")
+	if err != nil {
+		c.JSON(400, gin.H{"message": "Session Token is invalid, login and try again!!"})
+		return
+	}
+
+	var db = config.GetDB()
+	var user models.User
+
+	if err := db.Where("session_token = ?", sessionToken).First(&user).Error; err != nil {
+		c.SetCookie("session_token", "", -1, "/", "localhost", false, true)
+		c.JSON(400, gin.H{"message": "Unauthorized access!!"})
+		return
+	}
+
+	var submissions []models.Submission
+	if err := db.Where("problem_id = ? AND user_id = ?", problemId, user.ID).Find(&submissions).Error; err != nil {
+		c.JSON(404, gin.H{"message": "Submissions not found!!"})
+		return
+	}
+
+	c.JSON(200, gin.H{"submissions": submissions})
 }
