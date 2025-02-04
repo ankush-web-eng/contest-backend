@@ -4,6 +4,7 @@ import (
 	"github.com/ankush-web-eng/contest-backend/config"
 	"github.com/ankush-web-eng/contest-backend/helpers"
 	"github.com/ankush-web-eng/contest-backend/models"
+	"github.com/ankush-web-eng/contest-backend/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -84,7 +85,7 @@ func signup(c *gin.Context) {
 		}
 	}
 
-	if err := helpers.SendEmail(helpers.EmailDetails{
+	if err := utils.SendEmail(utils.EmailDetails{
 		From:    "ankushsingh.dev@gmail.com",
 		To:      reqBody.Email,
 		Subject: "Verify your email",
@@ -241,7 +242,7 @@ func sendResetMail(c *gin.Context) {
 		return
 	}
 
-	if err := helpers.SendEmail(helpers.EmailDetails{
+	if err := utils.SendEmail(utils.EmailDetails{
 		From:    "ankushsingh.dev@gmail.com",
 		To:      reqBody.Email,
 		Subject: "Reset your password",
