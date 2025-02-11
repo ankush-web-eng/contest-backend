@@ -6,6 +6,7 @@ import (
 
 	"github.com/ankush-web-eng/contest-backend/config"
 	"github.com/ankush-web-eng/contest-backend/models"
+	"github.com/ankush-web-eng/contest-backend/types"
 	"github.com/gin-gonic/gin"
 )
 
@@ -82,28 +83,8 @@ func getContests(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"user_contests": contests})
 }
 
-type createContestRequest struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	StartTime   string `json:"start_time" binding:"required"`
-	EndTime     string `json:"end_time" binding:"required"`
-
-	IsPublic    bool `json:"is_public" binding:"required"`
-	MaxDuration int  `json:"max_duration"`
-
-	CreatorID uint `json:"creator_id" binding:"required"`
-
-	Status      string `json:"status" binding:"required"`
-	RatingFloor int    `json:"rating_floor"`
-	RatingCeil  int    `json:"rating_ceil"`
-
-	IsRated       bool   `json:"is_rated" binding:"required"`
-	RatingType    string `json:"rating_type" binding:"required"`
-	RatingKFactor int    `json:"rating_k_factor" binding:"required"`
-}
-
 func createContest(c *gin.Context) {
-	var reqBody createContestRequest
+	var reqBody types.CreateContestRequest
 
 	if err := c.ShouldBindJSON(&reqBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Request type is invalid, please fix the sent data and it's types!!"})
@@ -165,34 +146,8 @@ func createContest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Contest created successfully!!", "contest": contest})
 }
 
-type updateContestRequest struct {
-	Problems []struct {
-		ContestID   uint   `json:"contest_id"`
-		Title       string `json:"title"`
-		Description string `json:"description"`
-
-		TimeLimit   int    `json:"time_limit"`
-		MemoryLimit int    `json:"memory_limit"`
-		Difficulty  string `json:"difficulty"`
-		Score       int    `json:"score"`
-		Rating      int    `json:"rating"`
-
-		SampleInput    string `json:"sample_input"`
-		SampleOutput   string `json:"sample_output"`
-		TestCasesCount int    `json:"test_cases_count"`
-
-		TestCases []struct {
-			ProblemID uint   `json:"problem_id"`
-			Input     string `json:"input"`
-			Output    string `json:"output"`
-			IsHidden  bool   `json:"is_hidden"`
-		} `json:"test_cases"`
-	} `json:"problems"`
-	ContestId uint `json:"contest_id"`
-}
-
 func updateContestProblems(c *gin.Context) {
-	var reqBody updateContestRequest
+	var reqBody types.UpdateContestRequest
 
 	if err := c.ShouldBindJSON(&reqBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Request type is invalid, please fix the sent data and its types!!"})

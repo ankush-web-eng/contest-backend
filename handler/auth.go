@@ -4,6 +4,7 @@ import (
 	"github.com/ankush-web-eng/contest-backend/config"
 	"github.com/ankush-web-eng/contest-backend/helpers"
 	"github.com/ankush-web-eng/contest-backend/models"
+	"github.com/ankush-web-eng/contest-backend/types"
 	"github.com/ankush-web-eng/contest-backend/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -22,20 +23,8 @@ func RegisterAuthRoutes(r *gin.Engine) {
 	}
 }
 
-type SignInRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
-type SignUpRequest struct {
-	FirstName string `json:"first_name" binding:"required"`
-	LastName  string `json:"last_name" binding:"required"`
-	Email     string `json:"email" binding:"required"`
-	Password  string `json:"password" binding:"required"`
-}
-
 func signup(c *gin.Context) {
-	var reqBody SignUpRequest
+	var reqBody types.SignUpRequest
 
 	if err := c.ShouldBindJSON(&reqBody); err != nil {
 		c.JSON(500, gin.H{"message": "Request Body is invalid!!"})
@@ -135,7 +124,7 @@ func verifyEmail(c *gin.Context) {
 }
 
 func signin(c *gin.Context) {
-	var reqBody SignInRequest
+	var reqBody types.SignInRequest
 
 	if err := c.ShouldBindJSON(&reqBody); err != nil {
 		c.JSON(500, gin.H{"error": "Request Body is invalid!!"})
