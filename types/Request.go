@@ -63,3 +63,11 @@ type UpdateContestRequest struct {
 	} `json:"problems"`
 	ContestId uint `json:"contest_id"`
 }
+
+type SubmitCodeRequest struct {
+	UserId    string `json:"user_id" binding:"required"`
+	ContestID uint   `json:"contest_id" binding:"required"`
+	ProblemID uint   `json:"problem_id" binding:"required"`
+	Language  string `json:"language" binding:"required"`
+	Code      string `json:"code" binding:"required"`
+}

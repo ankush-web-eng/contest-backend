@@ -138,11 +138,13 @@ type Problem struct {
 }
 
 type TestCase struct {
-	ID        uint   `gorm:"primaryKey"`
-	ProblemID uint   `gorm:"not null;index"`
-	Input     string `gorm:"not null"`
-	Output    string `gorm:"not null"`
-	IsHidden  bool   `gorm:"default:true"`
+	ID          uint   `gorm:"primaryKey"`
+	ProblemID   uint   `gorm:"not null;index"`
+	Input       string `gorm:"not null"`
+	Output      string `gorm:"not null"`
+	IsHidden    bool   `gorm:"default:true"`
+	TimeLimit   int    `gorm:"not null"` // in milliseconds
+	MemoryLimit int    `gorm:"not null"` // in KB
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
