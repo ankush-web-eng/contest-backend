@@ -8,7 +8,6 @@ import (
 	"github.com/ankush-web-eng/contest-backend/types"
 	"github.com/ankush-web-eng/contest-backend/utils"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 func RegisterCodeRoutes(r *gin.Engine) {
@@ -135,19 +134,19 @@ func submitCode(c *gin.Context) {
 			return
 		}
 
-		if err := tx.Model(&problem).UpdateColumn("attempt_count", gorm.Expr("attempt_count + ?", 1)).Error; err != nil {
-			tx.Rollback()
-			c.JSON(500, gin.H{"message": "Error updating problem statistics"})
-			return
-		}
+		// if err := tx.Model(&problem).UpdateColumn("attempt_count", gorm.Expr("attempt_count + ?", 1)).Error; err != nil {
+		// 	tx.Rollback()
+		// 	c.JSON(500, gin.H{"message": "Error updating problem statistics"})
+		// 	return
+		// }
 
-		if allPassed {
-			if err := tx.Model(&problem).UpdateColumn("success_count", gorm.Expr("success_count + ?", 1)).Error; err != nil {
-				tx.Rollback()
-				c.JSON(500, gin.H{"message": "Error updating problem statistics"})
-				return
-			}
-		}
+		// if allPassed {
+		// 	if err := tx.Model(&problem).UpdateColumn("success_count", gorm.Expr("success_count + ?", 1)).Error; err != nil {
+		// 		tx.Rollback()
+		// 		c.JSON(500, gin.H{"message": "Error updating problem statistics"})
+		// 		return
+		// 	}
+		// }
 
 		if err := tx.Commit().Error; err != nil {
 			c.JSON(500, gin.H{"message": "Error committing transaction"})
