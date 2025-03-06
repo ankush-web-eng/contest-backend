@@ -27,7 +27,7 @@ func submitCode(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"message": err.Error()})
+		c.JSON(400, gin.H{"message": err.Error() + "\n Please provide valid data"})
 		return
 	}
 

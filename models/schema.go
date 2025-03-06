@@ -143,8 +143,8 @@ type TestCase struct {
 	Input       string `gorm:"not null"`
 	Output      string `gorm:"not null"`
 	IsHidden    bool   `gorm:"default:true"`
-	TimeLimit   int    `gorm:"not null"` // in milliseconds
-	MemoryLimit int    `gorm:"not null"` // in KB
+	TimeLimit   int    // in milliseconds
+	MemoryLimit int    // in KB
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
